@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.StringTokenizer;
 
+import android.R.integer;
 import de.kp.net.rtsp.RtspConstants;
 
 /**
@@ -147,6 +148,22 @@ public class Parser {
 
         return interleaved;
 
+    }
+    /**
+     * 
+     * @param request
+     * @return get trackId, 1 represents Video, 2 represents Audio
+     * @throws Exception
+     */
+    public static int getTrackID(String request) throws Exception{
+    	int trackId = 0;
+    	String lineInput = getLineInput(request, " ", "rtsp");
+    	if(lineInput.contains("trackID="))
+    	{
+    		String[] parts = lineInput.split("rtsp://" + RtspConstants.SERVER_IP + "/video/trackID="); 
+    		trackId = Integer.parseInt(parts[1]);
+    	}
+    	return trackId;
     }
 
     /**

@@ -18,40 +18,31 @@
 
 package de.kp.net.rtp.recorder;
 
-import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263Encoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263EncoderParams;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.MediaCodec;
-import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import android.R.integer;
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.hardware.Camera;
 import android.os.SystemClock;
+import android.text.InputFilter.LengthFilter;
 import android.util.Log;
 
-import java.util.Vector;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * Live RTP audio player. Supports only H.263 and H264 QCIF formats.
  */
-public class RtspAudioRecorder implements Camera.PreviewCallback {
+public class RtspAudioRecorder {
 
-    /**
-     * Video format
-     */
-    private VideoFormat videoFormat;
 
     /**
      * Local RTP port
@@ -61,7 +52,7 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
     /**
      * RTP sender session
      */
-    private MediaRtpSender rtpMediaSender = null;
+    private AudioRtpSender rtpMediaSender = null;
 
     /**
      * RTP media input
@@ -71,7 +62,9 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
     /**
      * Last audio data
      */
-    private AudioBuffer audioBuffer = null;
+    private byte[] audioBuffer = null;
+    
+    private static final int AUDIO_BUFFER_LEN = 1024 * 10;
 
     /**
      * Is player opened
@@ -88,6 +81,12 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
      */
     private long audioStartTime = 0L;
 
+    /*
+     * AudioFile in assets folds
+     */
+    private String fileName = "demo.m4a";
+    private InputStream input;
+    private BufferedInputStream bis;
 
     /**
      * The logger
@@ -99,9 +98,18 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
     /**
      * Constructor
      */
-    public RtspAudioRecorder() {
+    public RtspAudioRecorder(Context context) {
     	if(audioBuffer == null)
-    		audioBuffer = new AudioBuffer();
+    		audioBuffer = new byte[AUDIO_BUFFER_LEN];
+     AssetManager assetManager = context.getAssets();
+ 	 try {
+		input = assetManager.open(fileName);
+		bis = new BufferedInputStream(input);
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		Log.e(TAG, "open audio file failed");
+		e.printStackTrace();
+	}
     }
 
     /**
@@ -114,7 +122,7 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
     }
 
     /**
-     * Return the video start time
+     * Return the audio start time
      *
      * @return Milliseconds
      */
@@ -154,7 +162,7 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
         	rtpInput = new MediaRtpInput();
             rtpInput.open();
             
-        	rtpMediaSender = new MediaRtpSender(videoFormat);            
+        	rtpMediaSender = new AudioRtpSender();            
             rtpMediaSender.prepareSession(rtpInput);
         
         } catch (Exception e) {
@@ -166,7 +174,7 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
             return;
         }
 
-        // Player is opened
+        // audioInput is opened
         opened = true;
 
     }
@@ -191,7 +199,7 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
     /**
      * Start the player
      */
-    public synchronized void start() {
+    public synchronized void start(){
 		Log.d(TAG , "start");
    	
         if ((opened == false) || (started == true)) {
@@ -203,7 +211,7 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
         // Start RTP layer
         rtpMediaSender.startSession();
         
-        // Start capture
+        // Start capture audio data,read into rtpInput
         captureThread.start();
 
         // Player is started
@@ -234,45 +242,6 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
     }
 
     /**
-     * Preview frame from the camera
-     *
-     * @param data Frame
-     * @param camera Camera
-     */
-    public void onPreviewFrame(byte[] data, Camera camera) {
-        if (frameBuffer != null)
-            frameBuffer.setFrame(data);
-    }
-
-    /**
-     * Audio buffer
-     */
-    private class AudioBuffer {
-        /**
-         * YUV frame where frame size is always (videoWidth*videoHeight*3)/2
-         */
-        private byte frame[] = new byte[1024];
-
-        /**
-         * Set the last captured frame
-         *
-         * @param frame Frame
-         */
-        public void setFrame(byte[] frame) {
-            this.frame = frame;
-        }
-
-        /**
-         * Return the last captured frame
-         *
-         * @return Frame
-         */
-        public byte[] getFrame() {
-            return frame;
-        }
-    }
-
-    /**
      * Video capture thread
      */
     private Thread captureThread = new Thread() {
@@ -288,57 +257,21 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
 //            if (rtpInput == null) {
 //                return;
 //            }
-            int timeToSleep = 1000 / selectedVideoCodec.getFramerate();
-            int timestampInc = 90000 / selectedVideoCodec.getFramerate();
-            byte[] audioData;
-            byte[] encodedFrame;
-            long encoderTs = 0;
-            long oldTs = System.currentTimeMillis();
-
+            int timestampInc = 0;
             while (started) {
                 // Set timestamp
                 long time = System.currentTimeMillis();
-                encoderTs = encoderTs + (time - oldTs);
-
                 // Get data to encode
-                audioData = audioBuffer.getFrame();
-                
-                // Encode frame
-                int encodeResult;
-                if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                    encodedFrame = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
-                    encodeResult = NativeH264Encoder.getLastEncodeStatus();
-                } else {
-                    encodedFrame = NativeH263Encoder.EncodeFrame(frameData, encoderTs);
-                    encodeResult = 0;
-                }
+                try {
+                    int readLength;
+					while ((readLength = input.read(audioBuffer)) != -1) {
+						rtpInput.addAudioData(audioBuffer, readLength,timeStamp += timestampInc);
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}  
 
-        		System.out.println("RtpVideoRecorder: captureThread: encodeResult == " + encodeResult);
-
-        		/*
-        		 * accept additional status 
-        		 * EAVCEI_MORE_NAL     --  there is more NAL to be retrieved
-        		 */
-                if ((encodeResult == 0 || encodeResult == 6) && encodedFrame.length > 0) {
-                	
-                	if (encodeResult == 6)
-                		System.out.println("RtpVideoRecorder: captureThread: Status == EAVCEI_MORE_NAL");
-                	
-                    // Send encoded frame                	
-                    rtpInput.addFrame(encodedFrame, timeStamp += timestampInc);
-                }
-
-                // Sleep between frames if necessary
-                long delta = System.currentTimeMillis() - time;
-                if (delta < timeToSleep) {
-                    try {
-                        Thread.sleep((timeToSleep - delta) - (((timeToSleep - delta) * 10) / 100));
-                    } catch (InterruptedException e) {
-                    }
-                }
-
-                // Update old timestamp
-                oldTs = time;
             }
         }
     };
@@ -364,9 +297,10 @@ public class RtspAudioRecorder implements Camera.PreviewCallback {
          * @param data Data
          * @param timestamp Timestamp
          */
-        public void addAudioData(byte[] data, long timestamp) {
+        public void addAudioData(byte[] data, int offset,long timestamp) {
+        	byte [] usefulData = Arrays.copyOf(data, offset);    	
             if (fifo != null) {
-                fifo.addObject(new MediaSample(data, timestamp));
+                fifo.addObject(new MediaSample(usefulData, timestamp));
             }
         }
 

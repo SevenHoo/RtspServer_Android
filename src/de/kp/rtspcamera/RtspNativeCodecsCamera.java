@@ -10,7 +10,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
-
+import de.kp.net.rtp.recorder.RtspAudioRecorder;
 import de.kp.net.rtp.recorder.RtspVideoRecorder;
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.server.RtspServer;
@@ -23,6 +23,8 @@ public class RtspNativeCodecsCamera extends Activity {
 //	private int SERVER_PORT = 8080;
 
 	private RtspVideoRecorder outgoingPlayer;
+	
+	private RtspAudioRecorder audioPlayer;
 
 	private SurfaceView mCameraPreview;
 	private SurfaceHolder previewHolder;
@@ -61,6 +63,9 @@ public class RtspNativeCodecsCamera extends Activity {
 //		outgoingPlayer = new RtspVideoRecorder("h263-2000");
 		outgoingPlayer = new RtspVideoRecorder("h264");
 		outgoingPlayer.open();
+		
+		audioPlayer = new RtspAudioRecorder(this);
+		audioPlayer.open();
 		
 
 	}
@@ -160,6 +165,8 @@ public class RtspNativeCodecsCamera extends Activity {
 			
 			// stop captureThread
 			outgoingPlayer.stop();
+			
+			audioPlayer.stop();
 
 
 			inPreview = false;
@@ -210,6 +217,8 @@ public class RtspNativeCodecsCamera extends Activity {
 			
 			// start captureThread
 			outgoingPlayer.start();
+			
+			audioPlayer.start();
 
 			camera.startPreview();
 			inPreview = true;
