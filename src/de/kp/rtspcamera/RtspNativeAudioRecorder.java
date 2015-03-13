@@ -19,23 +19,14 @@ public class RtspNativeAudioRecorder extends Activity {
 
 	private String TAG = "RTSPNativeCamera";
 
-	// default RTSP command port is 554
+// default RTSP command port is 554
 //	private int SERVER_PORT = 8080;
-
-	private RtspVideoRecorder outgoingPlayer;
 	
 	private RtspAudioRecorder audioPlayer;
 
-	private SurfaceView mCameraPreview;
-	private SurfaceHolder previewHolder;
-
-	private Camera camera;
 
 	private boolean inPreview = false;
 	private boolean cameraConfigured = false;
-
-	private int mPreviewWidth = Integer.valueOf(RtspConstants.WIDTH);
-	private int mPreviewHeight = Integer.valueOf(RtspConstants.HEIGHT);
 
 	private RtspServer streamer;
 
@@ -52,17 +43,6 @@ public class RtspNativeAudioRecorder extends Activity {
 
 		setContentView(R.layout.audiorecorder);
 
-		/*
-		 * Camera preview initialization
-		 */
-		mCameraPreview = (SurfaceView) findViewById(R.id.smallcameraview);
-		previewHolder = mCameraPreview.getHolder();
-		previewHolder.addCallback(surfaceCallback);
-		previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-
-//		outgoingPlayer = new RtspVideoRecorder("h263-2000");
-		outgoingPlayer = new RtspVideoRecorder("h264");
-		outgoingPlayer.open();
 		
 		audioPlayer = new RtspAudioRecorder(this);
 		audioPlayer.open();
