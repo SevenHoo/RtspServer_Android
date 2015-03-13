@@ -3,6 +3,7 @@ package de.kp.rtspcamera;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
@@ -66,7 +67,6 @@ public class RtspNativeCodecsCamera extends Activity {
 		
 		audioPlayer = new RtspAudioRecorder(this);
 		audioPlayer.open();
-		
 
 	}
 

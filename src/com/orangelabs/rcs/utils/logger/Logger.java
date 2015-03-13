@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.utils.logger;
 
+import android.util.Log;
+
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
 
 /**
@@ -113,6 +115,7 @@ public class Logger {
 	 */
 	public void debug(String trace) {
 		printTrace(trace, DEBUG_LEVEL);
+		Log.e(classname,trace);
 	}
 
 	/**

@@ -57,13 +57,13 @@ public class SDP {
 		StringBuffer buf = new StringBuffer();
 		
 		//m=<media> <port> <proto> <fmt>
-		buf.append("m=audio " + audioClientPort + " RTP/AVP 14" + RtspResponse.CRLF);
+		buf.append("m=audio " + audioClientPort + " RTP/AVP 97" + RtspResponse.CRLF);
 		//a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
 		
-		buf.append("a=rtpmap:14 MPA/90000" + RtspResponse.CRLF);
+		buf.append("a=rtpmap:97 mpeg4-generic/260000" + RtspResponse.CRLF);
 		//buf.append("a=control:rtsp://" + RtspConstants.SERVER_IP + "/audio" + RtspResponse.CRLF);
 		
-		buf.append("a=mimetype: audio/MPA" + RtspResponse.CRLF);
+		//buf.append("a=mimetype: audio/MPA" + RtspResponse.CRLF);
 		buf.append("a=range:npt=0-" + RtspResponse.CRLF);
 		
 		buf.append("a=control:trackID=" + String.valueOf(track));

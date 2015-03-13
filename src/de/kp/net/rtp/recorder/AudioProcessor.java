@@ -137,6 +137,10 @@ public class AudioProcessor extends Thread {
                     if (seqNum > bigSeqNum) {
                         bigSeqNum = seqNum;
                     }
+                    if (logger.isActivated()) {
+						logger.debug("Buffer.Len = " + inBuffer.getLength());
+					}
+                    outputStream.write(inBuffer);
 
                 }
 			}

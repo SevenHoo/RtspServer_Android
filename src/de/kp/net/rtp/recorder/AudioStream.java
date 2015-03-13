@@ -18,6 +18,7 @@
 
 package de.kp.net.rtp.recorder;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.ProcessorInputStream;
@@ -103,6 +104,7 @@ public class AudioStream implements ProcessorInputStream {
     	}
     	
     	// Create a buffer
+    	buffer.setFormat(new AudioFormat("mpeg4-generic", 97));
 	    buffer.setData(sample.getData());   	
 	    buffer.setLength(sample.getLength());
     	buffer.setSequenceNumber(seqNo++);

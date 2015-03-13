@@ -200,7 +200,7 @@ public class RtspAudioRecorder {
      * Start the player
      */
     public synchronized void start(){
-		Log.d(TAG , "start");
+		Log.e(TAG , "start");
    	
         if ((opened == false) || (started == true)) {
             return;
