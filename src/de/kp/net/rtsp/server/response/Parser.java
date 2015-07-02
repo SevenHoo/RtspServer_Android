@@ -6,6 +6,7 @@ import java.net.URI;
 import java.util.StringTokenizer;
 
 import android.R.integer;
+import android.util.Log;
 import de.kp.net.rtsp.RtspConstants;
 
 /**
@@ -160,8 +161,8 @@ public class Parser {
     	String lineInput = getLineInput(request, " ", "rtsp");
     	if(lineInput.contains("trackID="))
     	{
-    		String[] parts = lineInput.split("rtsp://" + RtspConstants.SERVER_IP + "/video/trackID="); 
-    		trackId = Integer.parseInt(parts[1]);
+    		char lastChar = lineInput.charAt(lineInput.length() - 1);
+    		trackId =Integer.parseInt(String.valueOf(lastChar));
     	}
     	return trackId;
     }

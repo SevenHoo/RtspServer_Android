@@ -41,11 +41,11 @@ public class SDP {
 		// filename contains leading slash
 		buf.append("s="  + fileName.substring(1) + RtspResponse.CRLF);
 		
-		int videotrack = 1;
+		//int videotrack = 1;
 		int audiotrack = 2;
 		
-		buf.append(getSDPVideo(videotrack));
-		buf.append(RtspResponse.CRLF);
+		//buf.append(getSDPVideo(videotrack));
+		//buf.append(RtspResponse.CRLF);
 		buf.append(getSDPAudio(audiotrack));
 
 		return buf.toString();
@@ -60,13 +60,13 @@ public class SDP {
 		buf.append("m=audio " + audioClientPort + " RTP/AVP 97" + RtspResponse.CRLF);
 		//a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
 		
-		buf.append("a=rtpmap:97 mpeg4-generic/260000" + RtspResponse.CRLF);
+		buf.append("a=rtpmap:97 mpeg4-generic/44100" + RtspResponse.CRLF);
 		//buf.append("a=control:rtsp://" + RtspConstants.SERVER_IP + "/audio" + RtspResponse.CRLF);
 		
 		//buf.append("a=mimetype: audio/MPA" + RtspResponse.CRLF);
-		buf.append("a=range:npt=0-" + RtspResponse.CRLF);
+		//buf.append("a=range:npt=0-" + RtspResponse.CRLF);
 		
-		buf.append("a=control:trackID=" + String.valueOf(track));
+		buf.append("a=control:trackID=" + String.valueOf(track) + RtspResponse.CRLF);
 		
 		return buf;
 	

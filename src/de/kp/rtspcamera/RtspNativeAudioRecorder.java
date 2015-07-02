@@ -3,15 +3,14 @@ package de.kp.rtspcamera;
 import java.io.IOException;
 
 import android.app.Activity;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import de.kp.net.rtp.recorder.RtspAudioRecorder;
-import de.kp.net.rtp.recorder.RtspVideoRecorder;
 import de.kp.net.rtsp.RtspConstants;
 import de.kp.net.rtsp.server.RtspServer;
 
@@ -24,9 +23,7 @@ public class RtspNativeAudioRecorder extends Activity {
 	
 	private RtspAudioRecorder audioPlayer;
 
-
-	private boolean inPreview = false;
-	private boolean cameraConfigured = false;
+	private Button butn;
 
 	private RtspServer streamer;
 
@@ -42,7 +39,14 @@ public class RtspNativeAudioRecorder extends Activity {
 		win.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.audiorecorder);
-
+		butn = (Button)findViewById(R.id.startButn);
+		butn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				audioPlayer.start();		
+			}
+		});
 		
 		audioPlayer = new RtspAudioRecorder(this);
 		audioPlayer.open();
@@ -74,12 +78,7 @@ public class RtspNativeAudioRecorder extends Activity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		/*
-		 * Camera initialization
-		 */
-		camera = Camera.open();
-
+		
 		super.onResume();
 
 	}
@@ -94,121 +93,17 @@ public class RtspNativeAudioRecorder extends Activity {
 
 		super.onPause();
 	}
-
-	/*
-	 * SurfaceHolder callback triple
-	 */
-	SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
-		/*
-		 * Created state: - Open camera - initial call to startPreview() - hook
-		 * PreviewCallback() on it, which notifies waiting thread with new
-		 * preview data - start thread
-		 * 
-		 * @see android.view.SurfaceHolder.Callback#surfaceCreated(android.view.
-		 * SurfaceHolder )
-		 */
-		public void surfaceCreated(SurfaceHolder holder) {
-			Log.d(TAG, "surfaceCreated");
-
-		}
-
-		/*
-		 * Changed state: - initiate camera preview size, set
-		 * camera.setPreviewDisplay(holder) - subsequent call to startPreview()
-		 * 
-		 * @see android.view.SurfaceHolder.Callback#surfaceChanged(android.view.
-		 * SurfaceHolder , int, int, int)
-		 */
-		public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-			Log.d(TAG, "surfaceChanged");
-			initializePreview(w, h);
-			startPreview();
-		}
-
-		/*
-		 * Destroy State: Take care on release of camera
-		 * 
-		 * @see
-		 * android.view.SurfaceHolder.Callback#surfaceDestroyed(android.view.
-		 * SurfaceHolder)
-		 */
-		public void surfaceDestroyed(SurfaceHolder holder) {
-			Log.d(TAG, "surfaceDestroyed");
-
-			if (inPreview) {
-				camera.stopPreview();
-			}
-			camera.setPreviewCallback(null);
-			camera.release();
-			camera = null;
-			
-			// stop captureThread
-			outgoingPlayer.stop();
-			
-			audioPlayer.stop();
-
-
-			inPreview = false;
-			cameraConfigured = false;
-
-		}
-	};
-
-
-	/**
-	 * This method checks availability of camera and preview
-	 * 
-	 * @param width
-	 * @param height
-	 */
-	private void initializePreview(int width, int height) {
-		Log.d(TAG, "initializePreview");
-
-		if (camera != null && previewHolder.getSurface() != null) {
-			try {
-				// provide SurfaceView for camera preview
-				camera.setPreviewDisplay(previewHolder);
-
-			} catch (Throwable t) {
-				Log.e(TAG, "Exception in setPreviewDisplay()", t);
-			}
-
-			if (!cameraConfigured) {
-
-				Camera.Parameters parameters = camera.getParameters();
-				parameters.setPreviewSize(mPreviewWidth, mPreviewHeight);
-
-				camera.setParameters(parameters);
-				cameraConfigured = true;
-
-			}
-		}
-	}
-
-	private void startPreview() {
-		Log.d(TAG, "startPreview");
-
-		if (cameraConfigured && camera != null) {
-
-			// activate onPreviewFrame()
-			// camera.setPreviewCallback(cameraPreviewCallback);
-			camera.setPreviewCallback(outgoingPlayer);
-			
-			// start captureThread
-			outgoingPlayer.start();
-			
-			audioPlayer.start();
-
-			camera.startPreview();
-			inPreview = true;
-
-		}
-	}
-
-
 	
-	public boolean isReady() {
-		return this.inPreview;
+	
+	
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		audioPlayer.stop();
+
 	}
+
 
 }

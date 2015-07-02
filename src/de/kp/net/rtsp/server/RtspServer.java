@@ -184,9 +184,9 @@ public class RtspServer implements Runnable {
 	    		rtspBufferedReader = new BufferedReader(new InputStreamReader(this.clientSocket.getInputStream()) );
 	    		rtspBufferedWriter = new BufferedWriter(new OutputStreamWriter(this.clientSocket.getOutputStream()) );
 	    		//client could send twice SETUP request
-	    		int setup = 2;
+	    		boolean setup = false;
 	    		 
-	    		while (setup != 0) {
+	    		while (setup == false) {
 	    			
 	    			// determine request type and also provide
 	    			// server response
@@ -200,42 +200,41 @@ public class RtspServer implements Runnable {
 	    			rtspBufferedWriter.write(response);
 		    		rtspBufferedWriter.flush();
 
-	    			if (requestType == RtspConstants.SETUP) {
-	    			    
-	    				setup --;
-	    				//twice setup
-	    				if(setup == 0)
-	    				{
-	    	  			    // update RTSP state
-		    			    rtspState = RtspConstants.READY;
-	    				}
-	    				
-	    				if(trackId == 1)
-	    				{
-		    				
-		    				// in case of a setup request, we create a new RtpSocket 
-		    				// instance used to send RtpPacket
-		    				this.videoRtpSocket = new RtpSocket(this.clientAddress, this.videoClientPort);
-		    				
-		    				// this RTP socket is registered as RTP receiver to also
-		    				// receive the streaming video of this device
-		    				RtpSender.getInstance().addReceiver(this.videoRtpSocket);
-	    				}
-	    				
-	    				if(trackId == 2)
-	    				{
-	    					// in case of a setup request, we create a new RtpSocket 
-		    				// instance used to send RtpPacket
-		    				this.audioRtpSocket = new RtpSocket(this.clientAddress, this.audioClientPort);
-		    				
-		    				// this RTP socket is registered as RTP receiver to also
-		    				// receive the streaming video of this device
-		    				AudioStreamSender.getInstance().addReceiver(this.audioRtpSocket);
-	    				}
+					if (requestType == RtspConstants.SETUP) {
 
-	  
+						setup = true;
 
+						// update RTSP state
+						rtspState = RtspConstants.READY;
 
+						if (trackId == 1) {
+
+							// in case of a setup request, we create a new
+							// RtpSocket
+							// instance used to send RtpPacket
+							this.videoRtpSocket = new RtpSocket(
+									this.clientAddress, this.videoClientPort);
+
+							// this RTP socket is registered as RTP receiver to
+							// also
+							// receive the streaming video of this device
+							RtpSender.getInstance().addReceiver(
+									this.videoRtpSocket);
+						}
+
+						if (trackId == 2) {
+							// in case of a setup request, we create a new
+							// RtpSocket
+							// instance used to send RtpPacket
+							this.audioRtpSocket = new RtpSocket(
+									this.clientAddress, this.audioClientPort);
+
+							// this RTP socket is registered as RTP receiver to
+							// also
+							// receive the streaming video of this device
+							AudioStreamSender.getInstance().addReceiver(
+									this.audioRtpSocket);
+						}
 	    			}
 	    			
 	    		}
@@ -261,7 +260,7 @@ public class RtspServer implements Runnable {
 
 	    				// make sure that the respective client socket is 
 	    				// ready to send RTP packets
-	    				this.videoRtpSocket.suspend(false);
+	    				//this.videoRtpSocket.suspend(false);
 	    				
 	    				this.audioRtpSocket.suspend(false);
 	    				
@@ -271,21 +270,21 @@ public class RtspServer implements Runnable {
 		    			Log.e(TAG, "request: PAUSE");
 	    				
 	    				// suspend RTP socket from sending video packets
-	    				this.videoRtpSocket.suspend(true);
+	    				//this.videoRtpSocket.suspend(true);
 	    				this.audioRtpSocket.suspend(true);
 	    				
 	    			} else if (requestType == RtspConstants.TEARDOWN) {
 		    			Log.e(TAG, "request: TEARDOWN");
 
 	    				// this RTP socket is removed from the RTP Sender
-	    				RtpSender.getInstance().removeReceiver(this.videoRtpSocket);
+	    				//RtpSender.getInstance().removeReceiver(this.videoRtpSocket);
 	    				AudioStreamSender.getInstance().removeReceiver(this.audioRtpSocket);
 	    				
 	    				// close the client socket for receiving incoming RTSP request
 	    				this.clientSocket.close();
 	    				
 	    				// close the associated RTP socket for sending RTP packets
-	    				this.videoRtpSocket.close();
+	    				//this.videoRtpSocket.close();
 	    				this.audioRtpSocket.close();
 	    			}
 
@@ -335,7 +334,6 @@ public class RtspServer implements Runnable {
             if (!requestLine.isEmpty()) {
                 cseq = Parser.getCseq(requestLine);
             }
-
             if (requestType == RtspConstants.OPTIONS) {
         		rtspResponse = new RtspOptionsResponse(cseq);
 
@@ -345,7 +343,7 @@ public class RtspServer implements Runnable {
 
             } else if (requestType == RtspConstants.SETUP) {
                 buildSetupResponse(requestLine);
-		                
+
             } else if (requestType == RtspConstants.PAUSE) {
                 rtspResponse = new RtspPauseResponse(cseq);
 		
@@ -380,11 +378,12 @@ public class RtspServer implements Runnable {
 	     * @throws Exception
 	     */
 	    private void buildSetupResponse(String requestLine) throws Exception {
-	        
+	    		        
 	    	rtspResponse = new RtspSetupResponse(cseq);
 	    	
 	    	//trackId
 	    	trackId = Parser.getTrackID(requestLine);
+	    	Log.e(TAG,"trackId is---->" + trackId);
 	    	if(trackId == 1)
 	    	{
 		    	// video client port

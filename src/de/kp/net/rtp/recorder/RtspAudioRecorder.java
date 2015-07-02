@@ -64,7 +64,7 @@ public class RtspAudioRecorder {
      */
     private byte[] audioBuffer = null;
     
-    private static final int AUDIO_BUFFER_LEN = 1024 * 10;
+    private static final int AUDIO_BUFFER_LEN = 1024 * 9;
 
     /**
      * Is player opened
@@ -87,6 +87,7 @@ public class RtspAudioRecorder {
     private String fileName = "demo.m4a";
     private InputStream input;
     private BufferedInputStream bis;
+    private Context context;
 
     /**
      * The logger
@@ -101,7 +102,8 @@ public class RtspAudioRecorder {
     public RtspAudioRecorder(Context context) {
     	if(audioBuffer == null)
     		audioBuffer = new byte[AUDIO_BUFFER_LEN];
-     AssetManager assetManager = context.getAssets();
+    	this.context = context;
+     AssetManager assetManager = this.context.getAssets();
  	 try {
 		input = assetManager.open(fileName);
 		bis = new BufferedInputStream(input);
@@ -203,6 +205,7 @@ public class RtspAudioRecorder {
 		Log.e(TAG , "start");
    	
         if ((opened == false) || (started == true)) {
+        	captureThread.start();
             return;
         }
 
@@ -261,12 +264,14 @@ public class RtspAudioRecorder {
             while (started) {
                 // Set timestamp
                 long time = System.currentTimeMillis();
-                // Get data to encode
+                // Get data to encode,loop
                 try {
                     int readLength;
-					while ((readLength = input.read(audioBuffer)) != -1) {
-						rtpInput.addAudioData(audioBuffer, readLength,timeStamp += timestampInc);
-					}
+                    while(true){
+                    	if((readLength = input.read(audioBuffer)) != -1){
+                    		rtpInput.addAudioData(audioBuffer, readLength,timeStamp += timestampInc);
+                    	}
+                    }					
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
